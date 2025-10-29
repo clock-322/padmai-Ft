@@ -41,7 +41,7 @@ const User = {
   async findOne(query) {
     const client = await require('../config/database')();
     const db = client.db();
-    return await db.collection(this.collection).findOne(query);
+    return await db.collection(User.collection).findOne(query);
   },
   
   // Find user by ID
@@ -49,7 +49,7 @@ const User = {
     const client = await require('../config/database')();
     const db = client.db();
     const { ObjectId } = require('mongodb');
-    return await db.collection(this.collection).findOne({ _id: new ObjectId(id) });
+    return await db.collection(User.collection).findOne({ _id: new ObjectId(id) });
   },
   
   // Create new user
@@ -67,8 +67,8 @@ const User = {
       updatedAt: new Date()
     };
     
-    const result = await db.collection(this.collection).insertOne(user);
-    return await db.collection(this.collection).findOne({ _id: result.insertedId });
+    const result = await db.collection(User.collection).insertOne(user);
+    return await db.collection(User.collection).findOne({ _id: result.insertedId });
   },
   
   // Compare password

@@ -34,14 +34,14 @@ const Payment = {
   async find(query = {}) {
     const client = await require('../config/database')();
     const db = client.db();
-    return await db.collection(this.collection).find(query).toArray();
+    return await db.collection(Payment.collection).find(query).toArray();
   },
   
   // Find payments with sort
   async findWithSort(query = {}, sortOptions = { createdAt: -1 }) {
     const client = await require('../config/database')();
     const db = client.db();
-    return await db.collection(this.collection).find(query).sort(sortOptions).toArray();
+    return await db.collection(Payment.collection).find(query).sort(sortOptions).toArray();
   },
   
   // Create new payment
@@ -55,8 +55,8 @@ const Payment = {
       updatedAt: new Date()
     };
     
-    const result = await db.collection(this.collection).insertOne(payment);
-    return await db.collection(this.collection).findOne({ _id: result.insertedId });
+    const result = await db.collection(Payment.collection).insertOne(payment);
+    return await db.collection(Payment.collection).findOne({ _id: result.insertedId });
   },
   
   schema: paymentSchema
