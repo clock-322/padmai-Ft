@@ -33,10 +33,12 @@ npm install
 3. Create a `.env` file in the root directory:
 ```bash
 PORT=3000
-MONGODB_URI=mongosh "mongodb+srv://cluster0.jhyqgks.mongodb.net/" --apiVersion 1 --username shabhi2022@gmail.com
+MONGODB_URI=mongodb+srv://cluster0.jhyqgks.mongodb.net
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 NODE_ENV=development
 ```
+
+**Important:** Replace `YOUR_PASSWORD` with your actual MongoDB Atlas password.
 
 4. Update the `MONGODB_URI` with your MongoDB connection string and set a strong `JWT_SECRET`.
 

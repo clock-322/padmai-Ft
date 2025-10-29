@@ -1,42 +1,44 @@
-const mongoose = require('mongoose');
+const { MongoClient } = require('mongodb');
 
-// Cache the connection to reuse in serverless environments
-let cached = global.mongoose;
-
+let cached = global.mongoClient;
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = global.mongoClient = { client: null, promise: null };
 }
 
 const connectDB = async () => {
-  // If connection exists and is ready, return it
-  if (cached.conn) {
-    return cached.conn;
-  }
+  // Return cached client if already connected
+  if (cached.client) return cached.client;
 
-  // If connection promise exists, wait for it
+  // Create new connection if not already connecting
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false,
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000, // 10s to find server
+      socketTimeoutMS: 45000,          // 45s idle timeout
+      family: 4,                       // 👈 Force IPv4 (fixes your "connection <monitor>" error)
+      retryWrites: true,
+      w: 'majority',
     };
 
-    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
-      console.log('MongoDB Connected');
-      return mongoose;
-    });
+    cached.promise = MongoClient.connect(process.env.MONGODB_URI, opts)
+      .then((client) => {
+        console.log('✅ MongoDB Connected successfully');
+        return client;
+      })
+      .catch((err) => {
+        console.error('❌ MongoDB Connection Failed:', err.message);
+        throw err;
+      });
   }
 
   try {
-    cached.conn = await cached.promise;
-  } catch (e) {
+    cached.client = await cached.promise;
+  } catch (err) {
     cached.promise = null;
-    console.error(`MongoDB Connection Error: ${e.message}`);
-    throw e;
+    console.error(`MongoDB Connection Error: ${err.message}`);
+    throw err;
   }
 
-  return cached.conn;
+  return cached.client;
 };
 
 module.exports = connectDB;
-

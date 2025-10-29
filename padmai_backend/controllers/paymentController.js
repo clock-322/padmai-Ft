@@ -35,7 +35,7 @@ exports.getPayment = async (req, res) => {
   try {
     const { studentId } = req.body;
 
-    const payments = await Payment.find({ studentId }).sort({ createdAt: -1 });
+    const payments = await Payment.findWithSort({ studentId });
 
     if (payments.length === 0) {
       return res.status(404).json({
@@ -64,7 +64,7 @@ exports.getPayment = async (req, res) => {
 // Get All Payments (Admin only)
 exports.getAllPayments = async (req, res) => {
   try {
-    const payments = await Payment.find().sort({ createdAt: -1 });
+    const payments = await Payment.findWithSort();
 
     res.status(200).json({
       success: true,

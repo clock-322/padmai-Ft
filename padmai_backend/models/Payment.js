@@ -1,39 +1,65 @@
-const mongoose = require('mongoose');
-
-const paymentSchema = new mongoose.Schema({
+// Payment schema definition (for reference and validation)
+const paymentSchema = {
   studentId: {
     type: String,
-    required: [true, 'Student ID is required'],
-    trim: true
+    required: true,
   },
   studentName: {
     type: String,
-    required: [true, 'Student name is required'],
-    trim: true
+    required: true,
   },
   className: {
     type: String,
-    required: [true, 'Class name is required'],
-    trim: true
+    required: true,
   },
   name: {
     type: String,
-    required: [true, 'Name is required'],
-    trim: true
+    required: true,
   },
   amount: {
     type: Number,
-    required: [true, 'Amount is required'],
-    min: [0, 'Amount must be positive']
+    required: true,
   },
   paymentType: {
     type: String,
-    required: [true, 'Payment type is required'],
-    trim: true
+    required: true,
   }
-}, {
-  timestamps: true
-});
+};
 
-module.exports = mongoose.model('Payment', paymentSchema);
+// Payment model functions
+const Payment = {
+  collection: 'payments',
+  
+  // Find payments by query
+  async find(query = {}) {
+    const client = await require('../config/database')();
+    const db = client.db();
+    return await db.collection(this.collection).find(query).toArray();
+  },
+  
+  // Find payments with sort
+  async findWithSort(query = {}, sortOptions = { createdAt: -1 }) {
+    const client = await require('../config/database')();
+    const db = client.db();
+    return await db.collection(this.collection).find(query).sort(sortOptions).toArray();
+  },
+  
+  // Create new payment
+  async create(paymentData) {
+    const client = await require('../config/database')();
+    const db = client.db();
+    
+    const payment = {
+      ...paymentData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    const result = await db.collection(this.collection).insertOne(payment);
+    return await db.collection(this.collection).findOne({ _id: result.insertedId });
+  },
+  
+  schema: paymentSchema
+};
 
+module.exports = Payment;

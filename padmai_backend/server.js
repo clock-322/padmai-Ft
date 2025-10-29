@@ -29,8 +29,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 }));
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/payments', paymentRoutes);
+app.use('/auth', authRoutes);
+app.use('/payments', paymentRoutes);
 
 // Root route
 app.get('/', (req, res) => {

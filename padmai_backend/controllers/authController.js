@@ -70,7 +70,7 @@ exports.login = async (req, res) => {
     }
 
     // Check password
-    const isPasswordValid = await user.comparePassword(password);
+    const isPasswordValid = await User.comparePassword(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
@@ -106,7 +106,11 @@ exports.login = async (req, res) => {
 // Get Current User
 exports.getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
+    const user = await User.findById(req.user._id);
+    // Remove password from response
+    if (user && user.password) {
+      delete user.password;
+    }
     res.status(200).json({
       success: true,
       data: {

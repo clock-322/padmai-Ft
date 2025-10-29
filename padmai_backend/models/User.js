@@ -1,48 +1,80 @@
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
+// User schema definition (for reference and validation)
+const userSchema = {
   name: {
     type: String,
-    required: [true, 'Name is required'],
-    trim: true
+    required: true,
   },
   email: {
     type: String,
-    required: [true, 'Email is required'],
+    required: true,
     unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters']
+    required: true,
   },
   role: {
     type: String,
     enum: ['student', 'teacher', 'admin'],
     default: 'student'
   }
-}, {
-  timestamps: true
-});
-
-// Hash password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    return next();
-  }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-// Method to compare password
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
 };
 
-module.exports = mongoose.model('User', userSchema);
+// Hash password before saving
+const hashPassword = async (password) => {
+  const salt = await bcrypt.genSalt(10);
+  return await bcrypt.hash(password, salt);
+};
 
+// Method to compare password
+const comparePassword = async (candidatePassword, hashedPassword) => {
+  return await bcrypt.compare(candidatePassword, hashedPassword);
+};
+
+// User model functions
+const User = {
+  collection: 'users',
+  
+  // Find user by email
+  async findOne(query) {
+    const client = await require('../config/database')();
+    const db = client.db();
+    return await db.collection(this.collection).findOne(query);
+  },
+  
+  // Find user by ID
+  async findById(id) {
+    const client = await require('../config/database')();
+    const db = client.db();
+    const { ObjectId } = require('mongodb');
+    return await db.collection(this.collection).findOne({ _id: new ObjectId(id) });
+  },
+  
+  // Create new user
+  async create(userData) {
+    const client = await require('../config/database')();
+    const db = client.db();
+    
+    // Hash password before saving
+    const hashedPassword = await hashPassword(userData.password);
+    const user = {
+      ...userData,
+      password: hashedPassword,
+      role: userData.role || 'student',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    const result = await db.collection(this.collection).insertOne(user);
+    return await db.collection(this.collection).findOne({ _id: result.insertedId });
+  },
+  
+  // Compare password
+  comparePassword,
+  
+  schema: userSchema
+};
+
+module.exports = User;
