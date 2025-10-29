@@ -12,10 +12,12 @@ const generateToken = (userId) => {
 exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+    console.log('🔐 Register API called with:', { name, email });
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.log('❌ User already exists:', email);
       return res.status(400).json({
         success: false,
         message: 'User with this email already exists'
@@ -29,10 +31,12 @@ exports.register = async (req, res) => {
       password,
       role: 'student' // Default role
     });
+    console.log('✅ User created successfully:', user._id);
 
     // Generate token
     const token = generateToken(user._id);
 
+    console.log('✅ Registration successful for:', email);
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -47,6 +51,7 @@ exports.register = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('❌ Register error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Error registering user',
@@ -59,10 +64,12 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('🔐 Login API called for:', email);
 
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
+      console.log('❌ User not found:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
@@ -72,6 +79,7 @@ exports.login = async (req, res) => {
     // Check password
     const isPasswordValid = await User.comparePassword(password, user.password);
     if (!isPasswordValid) {
+      console.log('❌ Invalid password for:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
@@ -81,6 +89,7 @@ exports.login = async (req, res) => {
     // Generate token
     const token = generateToken(user._id);
 
+    console.log('✅ Login successful for:', email);
     res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -95,6 +104,7 @@ exports.login = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('❌ Login error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Error logging in',
@@ -106,11 +116,13 @@ exports.login = async (req, res) => {
 // Get Current User
 exports.getCurrentUser = async (req, res) => {
   try {
+    console.log('👤 Get current user called for:', req.user._id);
     const user = await User.findById(req.user._id);
     // Remove password from response
     if (user && user.password) {
       delete user.password;
     }
+    console.log('✅ Current user fetched:', user?.email);
     res.status(200).json({
       success: true,
       data: {
@@ -118,6 +130,7 @@ exports.getCurrentUser = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('❌ Get current user error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Error fetching user',
