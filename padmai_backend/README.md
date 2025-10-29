@@ -33,7 +33,7 @@ npm install
 3. Create a `.env` file in the root directory:
 ```bash
 PORT=3000
-MONGODB_URI=mongodb://localhost:27017/padmai_db
+MONGODB_URI=mongosh "mongodb+srv://cluster0.jhyqgks.mongodb.net/" --apiVersion 1 --username shabhi2022@gmail.com
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 NODE_ENV=development
 ```
