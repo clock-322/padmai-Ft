@@ -26,12 +26,7 @@ const options = {
           description: 'Enter JWT token obtained from login endpoint'
         }
       }
-    },
-    security: [
-      {
-        bearerAuth: []
-      }
-    ]
+    }
   },
   apis: ['./routes/*.js', './server.js']
 };
