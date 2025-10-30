@@ -10,8 +10,7 @@ const { validateAddPayment, validateGetPayment } = require('../middleware/valida
  *   post:
  *     summary: Add a new payment
  *     tags: [Payments]
- *     security:
- *       - bearerAuth: []
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -52,7 +51,7 @@ const { validateAddPayment, validateGetPayment } = require('../middleware/valida
  *       401:
  *         description: Unauthorized
  */
-router.post('/add', authenticateToken, validateAddPayment, paymentController.addPayment);
+router.post('/add', validateAddPayment, paymentController.addPayment);
 
 /**
  * @swagger
