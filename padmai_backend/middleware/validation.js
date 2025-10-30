@@ -45,6 +45,16 @@ const validateLogin = [
 
 // Add Payment validation rules
 const validateAddPayment = [
+  // Normalize incoming body keys and defaults
+  (req, res, next) => {
+    if (!req.body.className && req.body.class) {
+      req.body.className = req.body.class;
+    }
+    if (!req.body.name || req.body.name.trim() === '') {
+      req.body.name = 'Payment';
+    }
+    next();
+  },
   body('studentId')
     .trim()
     .notEmpty().withMessage('Student ID is required'),
