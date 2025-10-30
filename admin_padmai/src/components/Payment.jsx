@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../utils/api';
 import './Payment.css';
 
 const Payment = () => {
+  const { token } = useAuth();
   const [formData, setFormData] = useState({
     studentId: '',
     studentName: '',
@@ -12,6 +15,8 @@ const Payment = () => {
 
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -19,8 +24,6 @@ const Payment = () => {
     // Student ID validation
     if (!formData.studentId.trim()) {
       newErrors.studentId = 'Student ID is required';
-    } else if (!/^\d+$/.test(formData.studentId)) {
-      newErrors.studentId = 'Student ID must contain only numbers';
     }
 
     // Student Name validation
@@ -28,8 +31,6 @@ const Payment = () => {
       newErrors.studentName = 'Student Name is required';
     } else if (formData.studentName.trim().length < 2) {
       newErrors.studentName = 'Student Name must be at least 2 characters';
-    } else if (!/^[a-zA-Z\s]+$/.test(formData.studentName.trim())) {
-      newErrors.studentName = 'Student Name must contain only letters and spaces';
     }
 
     // Class validation
@@ -68,27 +69,48 @@ const Payment = () => {
         [name]: ''
       }));
     }
+    if (errorMessage) {
+      setErrorMessage('');
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitted(false);
+    setErrorMessage('');
+    setLoading(true);
 
     if (validateForm()) {
-      // Form is valid, handle submission
-      console.log('Form submitted:', formData);
-      setSubmitted(true);
-      // Reset form after 2 seconds
-      setTimeout(() => {
-        setFormData({
-          studentId: '',
-          studentName: '',
-          class: '',
-          amount: '',
-          paymentType: ''
-        });
-        setSubmitted(false);
-      }, 2000);
+      try {
+        // Call the API to add payment
+        const response = await api.addPayment(formData, token || 'dummy-token');
+        
+        if (response.success) {
+          console.log('Payment submitted successfully:', response);
+          setSubmitted(true);
+          
+          // Reset form after 3 seconds
+          setTimeout(() => {
+            setFormData({
+              studentId: '',
+              studentName: '',
+              class: '',
+              amount: '',
+              paymentType: ''
+            });
+            setSubmitted(false);
+          }, 3000);
+        } else {
+          setErrorMessage(response.message || 'Failed to submit payment');
+        }
+      } catch (error) {
+        console.error('Payment submission error:', error);
+        setErrorMessage(error.message || 'An error occurred. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setLoading(false);
     }
   };
 
@@ -100,6 +122,12 @@ const Payment = () => {
         {submitted && (
           <div className="success-message">
             Payment submitted successfully!
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="error-message">
+            {errorMessage}
           </div>
         )}
 
@@ -188,8 +216,8 @@ const Payment = () => {
             )}
           </div>
 
-          <button type="submit" className="submit-btn">
-            Submit
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? 'Submitting...' : 'Submit'}
           </button>
         </form>
       </div>
@@ -198,4 +226,3 @@ const Payment = () => {
 };
 
 export default Payment;
-

@@ -33,6 +33,10 @@ const { validateRegister, validateLogin } = require('../middleware/validation');
  *                 type: string
  *                 minLength: 6
  *                 example: password123
+ *               role:
+ *                 type: string
+ *                 enum: [parent, teacher, admin]
+ *                 example: parent
  *     responses:
  *       201:
  *         description: User registered successfully

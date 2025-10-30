@@ -17,8 +17,8 @@ const userSchema = {
   },
   role: {
     type: String,
-    enum: ['student', 'teacher', 'admin'],
-    default: 'student'
+    enum: ['parent', 'teacher', 'admin'],
+    default: 'parent'
   }
 };
 
@@ -62,7 +62,7 @@ const User = {
     const user = {
       ...userData,
       password: hashedPassword,
-      role: userData.role || 'student',
+      role: userData.role || 'parent',
       createdAt: new Date(),
       updatedAt: new Date()
     };

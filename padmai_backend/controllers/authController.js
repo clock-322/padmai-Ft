@@ -11,8 +11,8 @@ const generateToken = (userId) => {
 // Register User
 exports.register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    console.log('🔐 Register API called with:', { name, email });
+    const { name, email, password, role } = req.body;
+    console.log('🔐 Register API called with:', { name, email, role });
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -24,12 +24,21 @@ exports.register = async (req, res) => {
       });
     }
 
+    // Validate role
+    const allowedRoles = ['parent', 'teacher', 'admin'];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid role. Allowed roles are parent, teacher, admin'
+      });
+    }
+
     // Create new user
     const user = await User.create({
       name,
       email,
       password,
-      role: 'student' // Default role
+      role
     });
     console.log('✅ User created successfully:', user._id);
 

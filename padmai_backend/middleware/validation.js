@@ -26,6 +26,9 @@ const validateRegister = [
   body('password')
     .notEmpty().withMessage('Password is required')
     .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('role')
+    .notEmpty().withMessage('Role is required')
+    .isIn(['parent', 'teacher', 'admin']).withMessage('Role must be parent, teacher, or admin'),
   handleValidationErrors
 ];
 
