@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const { authenticateToken } = require('../middleware/auth');
-const { validateRegister, validateLogin } = require('../middleware/validation');
+const { validateRegister, validateLogin, validateEditProfile } = require('../middleware/validation');
 
 /**
  * @swagger
@@ -119,6 +119,55 @@ router.post('/login', validateLogin, authController.login);
  *         description: Unauthorized
  */
 router.get('/me', authenticateToken, authController.getCurrentUser);
+
+/**
+ * @swagger
+ * /api/auth/edit-profile:
+ *   put:
+ *     summary: Edit user profile (name only)
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - name
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: john@example.com
+ *               name:
+ *                 type: string
+ *                 minLength: 2
+ *                 example: John Doe Updated
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: User not found
+ */
+router.put('/edit-profile', validateEditProfile, authController.editProfile);
 
 module.exports = router;
 

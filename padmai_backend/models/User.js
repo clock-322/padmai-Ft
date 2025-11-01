@@ -74,6 +74,26 @@ const User = {
   // Compare password
   comparePassword,
   
+  // Update user by email
+  async updateByEmail(email, updateData) {
+    const client = await require('../config/database')();
+    const db = client.db();
+    const { ObjectId } = require('mongodb');
+    
+    const updateFields = {
+      ...updateData,
+      updatedAt: new Date()
+    };
+    
+    const result = await db.collection(User.collection).findOneAndUpdate(
+      { email },
+      { $set: updateFields },
+      { returnDocument: 'after' }
+    );
+    
+    return result;
+  },
+  
   schema: userSchema
 };
 

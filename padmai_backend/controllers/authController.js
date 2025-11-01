@@ -148,3 +148,57 @@ exports.getCurrentUser = async (req, res) => {
   }
 };
 
+// Edit Profile
+exports.editProfile = async (req, res) => {
+  try {
+    const { email, name } = req.body;
+    console.log('✏️ Edit profile API called for:', email);
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log('❌ User not found:', email);
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Update only the name field
+    const updatedUser = await User.updateByEmail(email, { name });
+    
+    if (!updatedUser) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update profile'
+      });
+    }
+
+    // Remove password from response
+    if (updatedUser.password) {
+      delete updatedUser.password;
+    }
+
+    console.log('✅ Profile updated successfully for:', email);
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        user: {
+          id: updatedUser._id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Edit profile error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating profile',
+      error: error.message
+    });
+  }
+};
+
