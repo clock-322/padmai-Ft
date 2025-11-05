@@ -127,7 +127,7 @@ router.post('/getAttendanceHistory', validateGetAttendanceHistory, attendanceCon
  * @swagger
  * /api/getClassAttendance:
  *   post:
- *     summary: Get attendance for all students in teacher's assigned class for a specific date
+ *     summary: Get latest attendance for all students in teacher's assigned class (no date limitation)
  *     tags: [Attendance]
  *     security: []
  *     requestBody:
@@ -142,11 +142,6 @@ router.post('/getAttendanceHistory', validateGetAttendanceHistory, attendanceCon
  *               teacherId:
  *                 type: string
  *                 example: "507f1f77bcf86cd799439011"
- *               date:
- *                 type: string
- *                 format: date
- *                 example: "2024-01-15"
- *                 description: Optional. Defaults to today if not provided
  *     responses:
  *       200:
  *         description: Class attendance retrieved successfully
@@ -166,8 +161,6 @@ router.post('/getAttendanceHistory', validateGetAttendanceHistory, attendanceCon
  *                       type: string
  *                     section:
  *                       type: string
- *                     date:
- *                       type: string
  *                     summary:
  *                       type: object
  *                       properties:
@@ -184,22 +177,21 @@ router.post('/getAttendanceHistory', validateGetAttendanceHistory, attendanceCon
  *                       items:
  *                         type: object
  *                         properties:
- *                           student:
- *                             type: object
+ *                           id:
+ *                             type: string
+ *                           firstName:
+ *                             type: string
+ *                           lastName:
+ *                             type: string
+ *                           classRollNo:
+ *                             type: string
+ *                           registrationNo:
+ *                             type: string
  *                           attendanceStatus:
  *                             type: string
  *                             nullable: true
  *                             enum: [present, absent]
- *                             description: Direct attendance status (null if not marked)
- *                           attendance:
- *                             type: object
- *                             nullable: true
- *                             properties:
- *                               status:
- *                                 type: string
- *                                 enum: [present, absent]
- *                               date:
- *                                 type: string
+ *                             description: Latest attendance status (null if not marked)
  *                     count:
  *                       type: number
  *       400:

@@ -147,6 +147,32 @@ const Attendance = {
       .toArray();
   },
   
+  // Get all attendance records for a class (latest attendance for each student)
+  async getLatestAttendanceByClass(className, section) {
+    const client = await require('../config/database')();
+    const db = client.db();
+    
+    // Get all attendance records for the class, sorted by date descending
+    const allAttendances = await db.collection(Attendance.collection)
+      .find({
+        class: className,
+        section
+      })
+      .sort({ date: -1 })
+      .toArray();
+    
+    // Group by studentId and get the latest attendance for each student
+    const latestAttendanceMap = {};
+    allAttendances.forEach(att => {
+      const studentId = typeof att.studentId === 'string' ? att.studentId : att.studentId.toString();
+      if (!latestAttendanceMap[studentId] || new Date(att.date) > new Date(latestAttendanceMap[studentId].date)) {
+        latestAttendanceMap[studentId] = att;
+      }
+    });
+    
+    return Object.values(latestAttendanceMap);
+  },
+  
   schema: attendanceSchema
 };
 

@@ -187,9 +187,6 @@ const validateGetClassAttendance = [
   body('teacherId')
     .trim()
     .notEmpty().withMessage('Teacher ID is required'),
-  body('date')
-    .optional()
-    .isISO8601().withMessage('Date must be a valid ISO 8601 date'),
   handleValidationErrors
 ];
 

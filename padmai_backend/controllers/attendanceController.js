@@ -44,9 +44,12 @@ exports.setAttendance = async (req, res) => {
     // Use provided date or current date
     const attendanceDate = date ? new Date(date) : new Date();
     
+    // Normalize studentId to string for consistent matching
+    const normalizedStudentId = student._id.toString();
+    
     // Create or update attendance
     const attendance = await Attendance.createOrUpdate({
-      studentId,
+      studentId: normalizedStudentId,
       teacherId,
       date: attendanceDate,
       status,
@@ -129,10 +132,10 @@ exports.getAttendanceHistory = async (req, res) => {
   }
 };
 
-// Get Attendance for Class (for a specific date)
+// Get Attendance for Class (latest attendance for each student, no date limitation)
 exports.getClassAttendance = async (req, res) => {
   try {
-    const { teacherId, date } = req.body;
+    const { teacherId } = req.body;
     console.log('📅 Get Class Attendance API called for teacher:', teacherId);
 
     // Verify teacher has class assigned
@@ -144,26 +147,24 @@ exports.getClassAttendance = async (req, res) => {
       });
     }
 
-    // Use provided date or current date
-    const attendanceDate = date ? new Date(date) : new Date();
-
     // Get all students in the class
     const students = await Student.find({
       class: assignment.class,
       section: assignment.section
     });
 
-    // Get attendance for the date
-    const attendances = await Attendance.getAttendanceByDate(
+    // Get latest attendance for all students in the class (no date limitation)
+    const attendances = await Attendance.getLatestAttendanceByClass(
       assignment.class,
-      assignment.section,
-      attendanceDate
+      assignment.section
     );
 
-    // Create a map of studentId to attendance
+    // Create a map of studentId to attendance (normalize all IDs to strings for matching)
     const attendanceMap = {};
     attendances.forEach(att => {
-      attendanceMap[att.studentId] = att;
+      // Normalize studentId to string for consistent matching
+      const normalizedId = typeof att.studentId === 'string' ? att.studentId : att.studentId.toString();
+      attendanceMap[normalizedId] = att;
     });
 
     // Combine student data with attendance and calculate statistics
@@ -171,7 +172,9 @@ exports.getClassAttendance = async (req, res) => {
     let absentCount = 0;
     
     const studentsWithAttendance = students.map(student => {
-      const attendance = attendanceMap[student._id.toString()] || null;
+      // Normalize student ID to string for matching
+      const studentIdStr = student._id.toString();
+      const attendance = attendanceMap[studentIdStr] || null;
       const status = attendance ? attendance.status : null;
       
       // Count present/absent
@@ -181,19 +184,14 @@ exports.getClassAttendance = async (req, res) => {
         absentCount++;
       }
       
+      // Return simplified student object with attendance status
       return {
-        student: {
-          id: student._id,
-          firstName: student.firstName,
-          lastName: student.lastName,
-          classRollNo: student.classRollNo,
-          registrationNo: student.registrationNo
-        },
-        attendanceStatus: status, // Direct status field
-        attendance: attendance ? {
-          status: attendance.status,
-          date: attendance.date
-        } : null
+        id: student._id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        classRollNo: student.classRollNo,
+        registrationNo: student.registrationNo,
+        attendanceStatus: status // Simplified - just the status
       };
     });
 
@@ -207,7 +205,6 @@ exports.getClassAttendance = async (req, res) => {
       data: {
         class: assignment.class,
         section: assignment.section,
-        date: attendanceDate,
         summary: {
           total: students.length,
           present: presentCount,
