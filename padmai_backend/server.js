@@ -11,6 +11,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const schoolOwnerRoutes = require('./routes/schoolOwnerRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
 
 // Initialize Express app
 const app = express();
@@ -48,9 +49,10 @@ app.use(
 // ===== API Routes =====
 app.use('/api/auth', authRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api', studentRoutes); // /addStudent, /getParentStudent
+app.use('/api', studentRoutes); // /addStudent, /getParentStudent, /getAllStudents
 app.use('/api', schoolOwnerRoutes); // /getTeachers, /assignTeacher
 app.use('/api', teacherRoutes); // /getClassStudents
+app.use('/api', attendanceRoutes); // /setAttendance, /getAttendanceHistory, /getClassAttendance
 
 // ===== Root & Health Routes =====
 app.get('/', (req, res) => {

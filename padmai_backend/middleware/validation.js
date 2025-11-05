@@ -156,6 +156,43 @@ const validateGetClassStudents = [
   handleValidationErrors
 ];
 
+// Set Attendance validation rules
+const validateSetAttendance = [
+  body('teacherId')
+    .trim()
+    .notEmpty().withMessage('Teacher ID is required'),
+  body('studentId')
+    .trim()
+    .notEmpty().withMessage('Student ID is required'),
+  body('status')
+    .trim()
+    .notEmpty().withMessage('Status is required')
+    .isIn(['present', 'absent']).withMessage('Status must be either "present" or "absent"'),
+  body('date')
+    .optional()
+    .isISO8601().withMessage('Date must be a valid ISO 8601 date'),
+  handleValidationErrors
+];
+
+// Get Attendance History validation rules
+const validateGetAttendanceHistory = [
+  body('studentId')
+    .trim()
+    .notEmpty().withMessage('Student ID is required'),
+  handleValidationErrors
+];
+
+// Get Class Attendance validation rules
+const validateGetClassAttendance = [
+  body('teacherId')
+    .trim()
+    .notEmpty().withMessage('Teacher ID is required'),
+  body('date')
+    .optional()
+    .isISO8601().withMessage('Date must be a valid ISO 8601 date'),
+  handleValidationErrors
+];
+
 module.exports = {
   validateRegister,
   validateLogin,
@@ -165,6 +202,9 @@ module.exports = {
   validateAddStudent,
   validateGetParentStudent,
   validateAssignTeacher,
-  validateGetClassStudents
+  validateGetClassStudents,
+  validateSetAttendance,
+  validateGetAttendanceHistory,
+  validateGetClassAttendance
 };
 
