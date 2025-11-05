@@ -44,6 +44,13 @@ const User = {
     return await db.collection(User.collection).findOne(query);
   },
   
+  // Find users by query
+  async find(query = {}) {
+    const client = await require('../config/database')();
+    const db = client.db();
+    return await db.collection(User.collection).find(query).toArray();
+  },
+  
   // Find user by ID
   async findById(id) {
     const client = await require('../config/database')();

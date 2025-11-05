@@ -98,11 +98,73 @@ const validateEditProfile = [
   handleValidationErrors
 ];
 
+// Add Student validation rules
+const validateAddStudent = [
+  body('parentId')
+    .trim()
+    .notEmpty().withMessage('Parent ID is required'),
+  body('firstName')
+    .trim()
+    .notEmpty().withMessage('First Name is required')
+    .isLength({ min: 2 }).withMessage('First Name must be at least 2 characters'),
+  body('lastName')
+    .trim()
+    .notEmpty().withMessage('Last Name is required')
+    .isLength({ min: 2 }).withMessage('Last Name must be at least 2 characters'),
+  body('class')
+    .trim()
+    .notEmpty().withMessage('Class is required'),
+  body('section')
+    .trim()
+    .notEmpty().withMessage('Section is required'),
+  body('registrationNo')
+    .trim()
+    .notEmpty().withMessage('Registration No. is required'),
+  body('classRollNo')
+    .trim()
+    .notEmpty().withMessage('Class Roll No. is required'),
+  handleValidationErrors
+];
+
+// Get Parent Student validation rules
+const validateGetParentStudent = [
+  body('parentId')
+    .trim()
+    .notEmpty().withMessage('Parent ID is required'),
+  handleValidationErrors
+];
+
+// Assign Teacher validation rules
+const validateAssignTeacher = [
+  body('teacherId')
+    .trim()
+    .notEmpty().withMessage('Teacher ID is required'),
+  body('class')
+    .trim()
+    .notEmpty().withMessage('Class is required'),
+  body('section')
+    .trim()
+    .notEmpty().withMessage('Section is required'),
+  handleValidationErrors
+];
+
+// Get Class Students validation rules
+const validateGetClassStudents = [
+  body('teacherId')
+    .trim()
+    .notEmpty().withMessage('Teacher ID is required'),
+  handleValidationErrors
+];
+
 module.exports = {
   validateRegister,
   validateLogin,
   validateAddPayment,
   validateGetPayment,
-  validateEditProfile
+  validateEditProfile,
+  validateAddStudent,
+  validateGetParentStudent,
+  validateAssignTeacher,
+  validateGetClassStudents
 };
 

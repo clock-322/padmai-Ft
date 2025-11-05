@@ -8,6 +8,9 @@ const connectDB = require('./config/database');
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const studentRoutes = require('./routes/studentRoutes');
+const schoolOwnerRoutes = require('./routes/schoolOwnerRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
 
 // Initialize Express app
 const app = express();
@@ -45,6 +48,9 @@ app.use(
 // ===== API Routes =====
 app.use('/api/auth', authRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api', studentRoutes); // /addStudent, /getParentStudent
+app.use('/api', schoolOwnerRoutes); // /getTeachers, /assignTeacher
+app.use('/api', teacherRoutes); // /getClassStudents
 
 // ===== Root & Health Routes =====
 app.get('/', (req, res) => {
@@ -54,7 +60,10 @@ app.get('/', (req, res) => {
     documentation: '/api-docs',
     endpoints: {
       auth: '/api/auth',
-      payments: '/api/payments'
+      payments: '/api/payments',
+      students: '/api/students',
+      schoolOwner: '/api/school-owner',
+      teacher: '/api/teacher'
     }
   });
 });
