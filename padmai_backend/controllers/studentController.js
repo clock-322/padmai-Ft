@@ -78,3 +78,29 @@ exports.getParentStudent = async (req, res) => {
   }
 };
 
+// Get All Students
+exports.getAllStudents = async (req, res) => {
+  try {
+    console.log('👨‍🎓 Get All Students API called');
+
+    const students = await Student.find({});
+
+    console.log('✅ All students retrieved. Count:', students.length);
+    res.status(200).json({
+      success: true,
+      message: 'All students retrieved successfully',
+      data: {
+        students,
+        count: students.length
+      }
+    });
+  } catch (error) {
+    console.error('❌ Get all students error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching all students',
+      error: error.message
+    });
+  }
+};
+

@@ -9,19 +9,38 @@ exports.getTeachers = async (req, res) => {
     // Find all users with role 'teacher'
     const teachers = await User.find({ role: 'teacher' });
 
-    // Remove password from response
-    const teachersWithoutPassword = teachers.map(teacher => {
-      const { password, ...teacherWithoutPassword } = teacher;
-      return teacherWithoutPassword;
+    // Get all teacher assignments
+    const assignments = await TeacherAssignment.find({});
+    
+    // Create a map of teacherId to assignment for quick lookup
+    const assignmentMap = {};
+    assignments.forEach(assignment => {
+      assignmentMap[assignment.teacherId] = assignment;
     });
 
-    console.log('✅ Teachers retrieved. Count:', teachersWithoutPassword.length);
+    // Remove password and add class/section assignment to each teacher
+    const teachersWithAssignments = teachers.map((teacher) => {
+      const { password, ...teacherWithoutPassword } = teacher;
+      const teacherId = teacher._id.toString();
+      
+      // Find assignment for this teacher
+      const assignment = assignmentMap[teacherId];
+      
+      // Add class and section to teacher object (null if no assignment)
+      return {
+        ...teacherWithoutPassword,
+        class: assignment ? assignment.class : null,
+        section: assignment ? assignment.section : null
+      };
+    });
+
+    console.log('✅ Teachers retrieved. Count:', teachersWithAssignments.length);
     res.status(200).json({
       success: true,
       message: 'Teachers retrieved successfully',
       data: {
-        teachers: teachersWithoutPassword,
-        count: teachersWithoutPassword.length
+        teachers: teachersWithAssignments,
+        count: teachersWithAssignments.length
       }
     });
   } catch (error) {

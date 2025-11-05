@@ -7,7 +7,7 @@ const { validateAssignTeacher } = require('../middleware/validation');
  * @swagger
  * /api/getTeachers:
  *   get:
- *     summary: Get list of all registered teachers
+ *     summary: Get list of all registered teachers with their class and section assignments
  *     tags: [School Owner]
  *     security: []
  *     responses:
@@ -29,6 +29,27 @@ const { validateAssignTeacher } = require('../middleware/validation');
  *                       type: array
  *                       items:
  *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           role:
+ *                             type: string
+ *                           class:
+ *                             type: string
+ *                             nullable: true
+ *                             description: Assigned class (null if not assigned)
+ *                           section:
+ *                             type: string
+ *                             nullable: true
+ *                             description: Assigned section (null if not assigned)
+ *                           createdAt:
+ *                             type: string
+ *                           updatedAt:
+ *                             type: string
  *                     count:
  *                       type: number
  */

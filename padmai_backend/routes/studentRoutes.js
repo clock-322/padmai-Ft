@@ -111,5 +111,57 @@ router.post('/addStudent', validateAddStudent, studentController.addStudent);
  */
 router.post('/getParentStudent', validateGetParentStudent, studentController.getParentStudent);
 
+/**
+ * @swagger
+ * /api/getAllStudents:
+ *   get:
+ *     summary: Get all students in the system
+ *     tags: [Students]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: All students retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     students:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           parentId:
+ *                             type: string
+ *                           firstName:
+ *                             type: string
+ *                           lastName:
+ *                             type: string
+ *                           class:
+ *                             type: string
+ *                           section:
+ *                             type: string
+ *                           registrationNo:
+ *                             type: string
+ *                           classRollNo:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                           updatedAt:
+ *                             type: string
+ *                     count:
+ *                       type: number
+ */
+router.get('/getAllStudents', studentController.getAllStudents);
+
 module.exports = router;
 
