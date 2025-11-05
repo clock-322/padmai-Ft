@@ -1,4 +1,3 @@
-const Attendance = require('../models/Attendance');
 const TeacherAssignment = require('../models/TeacherAssignment');
 const Student = require('../models/Student');
 
@@ -47,29 +46,56 @@ exports.setAttendance = async (req, res) => {
     // Normalize studentId to string for consistent matching
     const normalizedStudentId = student._id.toString();
     
-    // Create or update attendance
-    const attendance = await Attendance.createOrUpdate({
-      studentId: normalizedStudentId,
-      teacherId,
-      date: attendanceDate,
-      status,
+    console.log('📝 Setting attendance - Original studentId:', studentId, 'Normalized:', normalizedStudentId);
+    console.log('📝 Assignment details:', {
       class: assignment.class,
-      section: assignment.section
+      section: assignment.section,
+      teacherId: teacherId
+    });
+    
+    // Update attendance status in student document
+    let updatedStudent;
+    try {
+      updatedStudent = await Student.updateAttendanceStatus(
+        normalizedStudentId,
+        status,
+        attendanceDate
+      );
+    } catch (dbError) {
+      console.error('❌ Database error in updateAttendanceStatus:', dbError);
+      throw dbError;
+    }
+
+    if (!updatedStudent) {
+      console.error('❌ Student is null after updateAttendanceStatus');
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update attendance - no data returned'
+      });
+    }
+
+    console.log('📝 Attendance saved successfully:', {
+      studentId: updatedStudent._id.toString(),
+      status: updatedStudent.attendanceStatus,
+      historyCount: updatedStudent.attendanceHistory?.length || 0
     });
 
-    // Auto-cleanup old records (older than 10 days)
-    await Attendance.deleteOldRecords();
-
-    console.log('✅ Attendance set successfully for student:', studentId);
+    console.log('✅ Attendance set successfully for student:', normalizedStudentId);
     res.status(200).json({
       success: true,
       message: 'Attendance set successfully',
       data: {
-        attendance
+        student: {
+          id: updatedStudent._id,
+          firstName: updatedStudent.firstName,
+          lastName: updatedStudent.lastName,
+          attendanceStatus: updatedStudent.attendanceStatus
+        }
       }
     });
   } catch (error) {
-    console.error('❌ Set attendance error:', error.message);
+    console.error('❌ Set attendance error:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Error setting attendance',
@@ -100,11 +126,8 @@ exports.getAttendanceHistory = async (req, res) => {
       });
     }
 
-    // Get attendance history for past 10 days
-    const history = await Attendance.getStudentHistory(studentId, 10);
-
-    // Auto-cleanup old records (older than 10 days)
-    await Attendance.deleteOldRecords();
+    // Get attendance history for past 10 days from student document
+    const history = await Student.getAttendanceHistory(studentId);
 
     console.log('✅ Attendance history retrieved for student:', studentId, 'Count:', history.length);
     res.status(200).json({
@@ -116,7 +139,8 @@ exports.getAttendanceHistory = async (req, res) => {
           firstName: student.firstName,
           lastName: student.lastName,
           class: student.class,
-          section: student.section
+          section: student.section,
+          attendanceStatus: student.attendanceStatus
         },
         history,
         count: history.length
@@ -153,29 +177,15 @@ exports.getClassAttendance = async (req, res) => {
       section: assignment.section
     });
 
-    // Get latest attendance for all students in the class (no date limitation)
-    const attendances = await Attendance.getLatestAttendanceByClass(
-      assignment.class,
-      assignment.section
-    );
+    console.log(`📊 Found ${students.length} students for class ${assignment.class}, section ${assignment.section}`);
 
-    // Create a map of studentId to attendance (normalize all IDs to strings for matching)
-    const attendanceMap = {};
-    attendances.forEach(att => {
-      // Normalize studentId to string for consistent matching
-      const normalizedId = typeof att.studentId === 'string' ? att.studentId : att.studentId.toString();
-      attendanceMap[normalizedId] = att;
-    });
-
-    // Combine student data with attendance and calculate statistics
+    // Combine student data with attendance status and calculate statistics
     let presentCount = 0;
     let absentCount = 0;
     
     const studentsWithAttendance = students.map(student => {
-      // Normalize student ID to string for matching
-      const studentIdStr = student._id.toString();
-      const attendance = attendanceMap[studentIdStr] || null;
-      const status = attendance ? attendance.status : null;
+      // Get attendance status directly from student document
+      const status = student.attendanceStatus || null;
       
       // Count present/absent
       if (status === 'present') {
@@ -191,12 +201,9 @@ exports.getClassAttendance = async (req, res) => {
         lastName: student.lastName,
         classRollNo: student.classRollNo,
         registrationNo: student.registrationNo,
-        attendanceStatus: status // Simplified - just the status
+        attendanceStatus: status // Status directly from student document
       };
     });
-
-    // Auto-cleanup old records (older than 10 days)
-    await Attendance.deleteOldRecords();
 
     console.log('✅ Class attendance retrieved for teacher:', teacherId);
     res.status(200).json({

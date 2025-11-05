@@ -76,39 +76,90 @@ const Attendance = {
     const client = await require('../config/database')();
     const db = client.db();
     
-    const date = new Date(attendanceData.date);
-    date.setHours(0, 0, 0, 0);
-    
-    const attendance = {
-      ...attendanceData,
-      date,
-      updatedAt: new Date()
-    };
-    
-    // Check if attendance already exists for this student and date
-    const existing = await this.findByStudentAndDate(attendanceData.studentId, date);
-    
-    if (existing) {
-      // Update existing attendance
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
+    try {
+      // Normalize date to start of day
+      const date = new Date(attendanceData.date);
+      date.setHours(0, 0, 0, 0);
       
-      const result = await db.collection(Attendance.collection).findOneAndUpdate(
-        { 
-          studentId: attendanceData.studentId,
-          date: { $gte: startOfDay, $lte: endOfDay }
-        },
-        { $set: attendance },
-        { returnDocument: 'after' }
-      );
-      return result;
-    } else {
-      // Create new attendance
-      attendance.createdAt = new Date();
-      const result = await db.collection(Attendance.collection).insertOne(attendance);
-      return await db.collection(Attendance.collection).findOne({ _id: result.insertedId });
+      // Ensure studentId is always a string
+      const normalizedStudentId = typeof attendanceData.studentId === 'string' 
+        ? attendanceData.studentId.trim() 
+        : String(attendanceData.studentId).trim();
+      
+      console.log('💾 Saving attendance - studentId:', normalizedStudentId, 'date:', date.toISOString());
+      console.log('💾 Attendance data:', {
+        studentId: normalizedStudentId,
+        teacherId: attendanceData.teacherId,
+        status: attendanceData.status,
+        class: attendanceData.class,
+        section: attendanceData.section,
+        date: date
+      });
+      
+      // Check if attendance already exists for this student and date
+      const existing = await this.findByStudentAndDate(normalizedStudentId, date);
+      console.log('💾 Existing attendance check:', existing ? 'Found existing' : 'No existing record');
+      
+      const attendance = {
+        studentId: normalizedStudentId,
+        teacherId: attendanceData.teacherId,
+        status: attendanceData.status,
+        class: attendanceData.class,
+        section: attendanceData.section,
+        date: date,
+        updatedAt: new Date()
+      };
+      
+      if (existing) {
+        console.log('💾 Updating existing attendance record');
+        // Update existing attendance
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        const result = await db.collection(Attendance.collection).findOneAndUpdate(
+          { 
+            studentId: normalizedStudentId,
+            date: { $gte: startOfDay, $lte: endOfDay }
+          },
+          { $set: attendance },
+          { returnDocument: 'after' }
+        );
+        
+        if (!result) {
+          console.error('❌ Failed to update attendance');
+          throw new Error('Failed to update attendance');
+        }
+        
+        console.log('💾 Updated attendance - studentId:', result.studentId, 'status:', result.status);
+        return result;
+      } else {
+        console.log('💾 Creating new attendance record');
+        // Create new attendance
+        attendance.createdAt = new Date();
+        
+        const result = await db.collection(Attendance.collection).insertOne(attendance);
+        console.log('💾 Insert result:', result.insertedId);
+        
+        if (!result.insertedId) {
+          console.error('❌ Failed to insert attendance');
+          throw new Error('Failed to insert attendance');
+        }
+        
+        const savedAttendance = await db.collection(Attendance.collection).findOne({ _id: result.insertedId });
+        
+        if (!savedAttendance) {
+          console.error('❌ Failed to retrieve saved attendance');
+          throw new Error('Failed to retrieve saved attendance');
+        }
+        
+        console.log('💾 Created attendance - studentId:', savedAttendance.studentId, 'status:', savedAttendance.status);
+        return savedAttendance;
+      }
+    } catch (error) {
+      console.error('❌ Error in createOrUpdate:', error);
+      throw error;
     }
   },
   
@@ -152,6 +203,8 @@ const Attendance = {
     const client = await require('../config/database')();
     const db = client.db();
     
+    console.log(`🔍 Querying attendance for class: ${className}, section: ${section}`);
+    
     // Get all attendance records for the class, sorted by date descending
     const allAttendances = await db.collection(Attendance.collection)
       .find({
@@ -161,14 +214,22 @@ const Attendance = {
       .sort({ date: -1 })
       .toArray();
     
+    console.log(`🔍 Found ${allAttendances.length} total attendance records`);
+    
     // Group by studentId and get the latest attendance for each student
     const latestAttendanceMap = {};
     allAttendances.forEach(att => {
-      const studentId = typeof att.studentId === 'string' ? att.studentId : att.studentId.toString();
+      // Normalize studentId to ensure consistent matching
+      const studentId = typeof att.studentId === 'string' 
+        ? att.studentId 
+        : (att.studentId?.toString ? att.studentId.toString() : String(att.studentId));
+      
       if (!latestAttendanceMap[studentId] || new Date(att.date) > new Date(latestAttendanceMap[studentId].date)) {
         latestAttendanceMap[studentId] = att;
       }
     });
+    
+    console.log(`🔍 Latest attendance for ${Object.keys(latestAttendanceMap).length} unique students`);
     
     return Object.values(latestAttendanceMap);
   },
