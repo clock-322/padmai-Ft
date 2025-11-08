@@ -66,7 +66,7 @@ router.post('/setAttendance', validateSetAttendance, attendanceController.setAtt
  * @swagger
  * /api/getAttendanceHistory:
  *   post:
- *     summary: Get attendance history for a student (past 10 days)
+ *     summary: Get attendance history for a student (past 30 days)
  *     tags: [Attendance]
  *     security: []
  *     requestBody:
@@ -103,17 +103,16 @@ router.post('/setAttendance', validateSetAttendance, attendanceController.setAtt
  *                       items:
  *                         type: object
  *                         properties:
- *                           _id:
- *                             type: string
- *                           studentId:
- *                             type: string
- *                           teacherId:
- *                             type: string
  *                           date:
  *                             type: string
+ *                             format: date-time
  *                           status:
  *                             type: string
- *                             enum: [present, absent]
+ *                             enum: [present, absent, not_marked]
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                             nullable: true
  *                     count:
  *                       type: number
  *       400:
@@ -190,8 +189,8 @@ router.post('/getAttendanceHistory', validateGetAttendanceHistory, attendanceCon
  *                           attendanceStatus:
  *                             type: string
  *                             nullable: true
- *                             enum: [present, absent]
- *                             description: Latest attendance status (null if not marked)
+ *                             enum: [present, absent, not_marked]
+ *                             description: Latest attendance status ("not_marked" if no attendance recorded)
  *                     count:
  *                       type: number
  *       400:

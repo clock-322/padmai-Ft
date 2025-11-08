@@ -27,6 +27,15 @@ const studentSchema = {
   classRollNo: {
     type: String,
     required: true,
+  },
+  attendanceStatus: {
+    type: String,
+    enum: ['present', 'absent', 'not_marked', null],
+    default: null
+  },
+  attendanceHistory: {
+    type: Array,
+    default: []
   }
 };
 
@@ -111,16 +120,22 @@ const Student = {
     // Sort by date descending (newest first)
     attendanceHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
     
-    // Keep only last 10 days
-    const tenDaysAgo = new Date();
-    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
-    tenDaysAgo.setHours(0, 0, 0, 0);
+    // Keep only last 30 days
+    const maxDays = 30;
+    const cutoffDate = new Date();
+    cutoffDate.setHours(0, 0, 0, 0);
+    cutoffDate.setDate(cutoffDate.getDate() - (maxDays - 1));
     
     attendanceHistory = attendanceHistory.filter(entry => {
       const entryDate = new Date(entry.date);
       entryDate.setHours(0, 0, 0, 0);
-      return entryDate >= tenDaysAgo;
+      return entryDate >= cutoffDate;
     });
+    
+    // Ensure history does not exceed maxDays entries
+    if (attendanceHistory.length > maxDays) {
+      attendanceHistory = attendanceHistory.slice(0, maxDays);
+    }
     
     // Update student document
     const result = await db.collection(Student.collection).findOneAndUpdate(
@@ -135,7 +150,7 @@ const Student = {
       { returnDocument: 'after' }
     );
     
-    return result;
+    return result?.value || null;
   },
   
   // Get attendance history for a student (last 10 days)
@@ -154,17 +169,36 @@ const Student = {
     
     // Get history and filter to last 10 days
     const attendanceHistory = student.attendanceHistory || [];
-    const tenDaysAgo = new Date();
-    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
-    tenDaysAgo.setHours(0, 0, 0, 0);
+    const maxDays = 30;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    return attendanceHistory
-      .filter(entry => {
-        const entryDate = new Date(entry.date);
-        entryDate.setHours(0, 0, 0, 0);
-        return entryDate >= tenDaysAgo;
-      })
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Create a map for quick lookup
+    const historyMap = {};
+    attendanceHistory.forEach(entry => {
+      const entryDate = new Date(entry.date);
+      entryDate.setHours(0, 0, 0, 0);
+      historyMap[entryDate.getTime()] = {
+        status: entry.status,
+        updatedAt: entry.updatedAt ? new Date(entry.updatedAt) : null
+      };
+    });
+    
+    const result = [];
+    for (let i = 0; i < maxDays; i++) {
+      const day = new Date(today);
+      day.setDate(today.getDate() - i);
+      const timeKey = day.getTime();
+      const historyEntry = historyMap[timeKey];
+      
+      result.push({
+        date: day,
+        status: historyEntry ? historyEntry.status : 'not_marked',
+        updatedAt: historyEntry?.updatedAt || null
+      });
+    }
+    
+    return result;
   },
   
   schema: studentSchema

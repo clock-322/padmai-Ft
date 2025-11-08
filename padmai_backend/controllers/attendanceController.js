@@ -126,10 +126,15 @@ exports.getAttendanceHistory = async (req, res) => {
       });
     }
 
-    // Get attendance history for past 10 days from student document
+    // Get attendance history for past 30 days from student document
     const history = await Student.getAttendanceHistory(studentId);
+    const formattedHistory = history.map(entry => ({
+      date: entry.date instanceof Date ? entry.date.toISOString() : new Date(entry.date).toISOString(),
+      status: entry.status,
+      updatedAt: entry.updatedAt ? (entry.updatedAt instanceof Date ? entry.updatedAt.toISOString() : new Date(entry.updatedAt).toISOString()) : null
+    }));
 
-    console.log('✅ Attendance history retrieved for student:', studentId, 'Count:', history.length);
+    console.log('✅ Attendance history retrieved for student:', studentId, 'Count:', formattedHistory.length);
     res.status(200).json({
       success: true,
       message: 'Attendance history retrieved successfully',
@@ -142,8 +147,8 @@ exports.getAttendanceHistory = async (req, res) => {
           section: student.section,
           attendanceStatus: student.attendanceStatus
         },
-        history,
-        count: history.length
+        history: formattedHistory,
+        count: formattedHistory.length
       }
     });
   } catch (error) {
@@ -185,7 +190,7 @@ exports.getClassAttendance = async (req, res) => {
     
     const studentsWithAttendance = students.map(student => {
       // Get attendance status directly from student document
-      const status = student.attendanceStatus || null;
+      const status = student.attendanceStatus || 'not_marked';
       
       // Count present/absent
       if (status === 'present') {
