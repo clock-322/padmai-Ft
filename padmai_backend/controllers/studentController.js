@@ -3,7 +3,7 @@ const Student = require('../models/Student');
 // Add Student
 exports.addStudent = async (req, res) => {
   try {
-    const { parentId, firstName, lastName, class: className, section, registrationNo, classRollNo } = req.body;
+    const { parentId, firstName, lastName, class: className, section, registrationNo, classRollNo, gender, idNumber } = req.body;
     console.log('👨‍🎓 Add Student API called by parent:', parentId);
 
     // Check if registration number already exists
@@ -23,7 +23,9 @@ exports.addStudent = async (req, res) => {
       class: className,
       section,
       registrationNo,
-      classRollNo
+      classRollNo,
+      ...(gender && { gender }),
+      ...(idNumber && { idNumber }),
     });
 
     console.log('✅ Student added successfully:', student._id);
