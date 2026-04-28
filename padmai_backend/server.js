@@ -12,6 +12,7 @@ const studentRoutes = require('./routes/studentRoutes');
 const schoolOwnerRoutes = require('./routes/schoolOwnerRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const progressRoutes = require('./routes/progressRoutes');
 
 // Initialize Express app
 const app = express();
@@ -53,6 +54,7 @@ app.use('/api', studentRoutes); // /addStudent, /getParentStudent, /getAllStuden
 app.use('/api', schoolOwnerRoutes); // /getTeachers, /assignTeacher
 app.use('/api', teacherRoutes); // /getClassStudents
 app.use('/api', attendanceRoutes); // /setAttendance, /getAttendanceHistory, /getClassAttendance
+app.use('/api/progress', progressRoutes); // /progress, /progress/student
 
 // ===== Root & Health Routes =====
 app.get('/', (req, res) => {

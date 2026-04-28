@@ -3,7 +3,7 @@ const Payment = require('../models/Payment');
 // Add Payment
 exports.addPayment = async (req, res) => {
   try {
-    const { studentId, studentName, className, name, amount, paymentType } = req.body;
+    const { studentId, studentName, className, name, amount, paymentType, dueDate, status } = req.body;
     console.log('💰 Add Payment API called for student:', studentId);
 
     const payment = await Payment.create({
@@ -12,7 +12,9 @@ exports.addPayment = async (req, res) => {
       className,
       name,
       amount,
-      paymentType
+      paymentType,
+      ...(dueDate && { dueDate }),
+      ...(status && { status }),
     });
 
     console.log('✅ Payment added successfully:', payment._id);
